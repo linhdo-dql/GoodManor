@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a93db0ff455f019479464999c07406d0, type: 3}
+  m_Name: 2
+  m_EditorClassIdentifier: 
+  id: 2
+  layout: 2,2,2,2,2
+  difficulty: 1
+  items: 1,2,3,4,5
+  time: 150
+  targetItemId: 12
+  targetItemCount: 1
+  rewardType: SingleTargetItem
+  storyStep: 2
+  minItem: 40
+  maxItem: 50
