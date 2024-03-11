@@ -22,4 +22,4 @@ MonoBehaviour:
   rewardType: CollectTargetItem
   storyStep: 7
   minItem: 40
-  maxItem: 50
+  maxItem: 80

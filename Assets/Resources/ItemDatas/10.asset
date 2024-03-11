@@ -15,4 +15,4 @@ MonoBehaviour:
   id: 10
   name: item_10
   type: Normal
-  sprite: {fileID: 21300000, guid: 04531770b16ac5e4186ac2853da53bcb, type: 3}
+  sprite: {fileID: 21300000, guid: f7e4e40d7275f2f449238941dd288d74, type: 3}

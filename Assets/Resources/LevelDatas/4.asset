@@ -21,5 +21,5 @@ MonoBehaviour:
   targetItemCount: 1
   rewardType: SingleTargetItem
   storyStep: 4
-  minItem: 40
-  maxItem: 50
+  minItem: 0
+  maxItem: 0

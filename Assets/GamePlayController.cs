@@ -105,11 +105,11 @@ public class GamePlayController : MonoBehaviour
         var tmpCount = 0;
         foreach (var block in blockDatas)
         {
-            
+           
             var cloneItemCounts = block.NumItems;
             for (int j = 0; j < block.NumItems; j++)
-            { 
-                if(j == 0)
+            {
+                if (j == 0)
                 {
 
                     int initLayerItemCount;
@@ -228,12 +228,14 @@ public class GamePlayController : MonoBehaviour
         ClearLayout();
         int blockCount = 0;
         var splitRow = levelData.layout.Split(',');
+        if(splitRow.Length > 8)
+        {
+            var layoutRectPos = layout.GetComponent<RectTransform>().localPosition;
+            layout.GetComponent<RectTransform>().localPosition = layoutRectPos - new Vector3(0, 154, 0);
+        }
         foreach (var rl in splitRow)
         {   
-            if(rl.Contains("out"))
-            {
-                Instantiate(rowPrefab, layout);
-            }
+            
             var row = Instantiate(rowPrefab, layout);
             var rowHorizontalLayout = row.GetComponent<HorizontalLayoutGroup>();
             AlignmentRowLayout(rl, rowHorizontalLayout);
@@ -249,6 +251,7 @@ public class GamePlayController : MonoBehaviour
         for(int i = 0; i < ric; i++)
         {
             var block = Instantiate(blockPrefab, row.transform);
+           
             blocks.Add(block);
         }
     }
@@ -262,6 +265,11 @@ public class GamePlayController : MonoBehaviour
         else if(rl.Contains("right"))
         {
             rowHorizontalLayout.childAlignment = TextAnchor.MiddleRight;
+        }
+        else if (rl.Contains("out"))
+        {
+            rowHorizontalLayout.childAlignment = TextAnchor.MiddleCenter;
+            rowHorizontalLayout.spacing = 256;
         }
         else
         {
@@ -299,6 +307,13 @@ public class GamePlayController : MonoBehaviour
         {
             GenerateLayers(blockDatas[i], blocks[i].transform);
         }
+        foreach (var bl in blocks)
+        {
+            var layerClone = Instantiate(layerPrefab, bl.transform);
+            layerClone.transform.SetAsFirstSibling();
+            var layerController = layerClone.GetComponent<LayerController>();
+            layerController.layerID = 999;
+        }
     }
 
     private void GenerateLayers(Block block, Transform blockTransform)
@@ -313,6 +328,7 @@ public class GamePlayController : MonoBehaviour
             layerController.PopulateData(block.Layers[i], blockTransform);
             layerController.SetState(i == 0 ? Utils.LayerState.Showing : (i>1 ? Utils.LayerState.Hide : Utils.LayerState.Wait));
        }
+      
     }
 
     public void NextLevel()

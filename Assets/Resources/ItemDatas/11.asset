@@ -15,4 +15,4 @@ MonoBehaviour:
   id: 11
   name: item_11
   type: Story
-  sprite: {fileID: 21300000, guid: 9a2595b3ae9276541abe4e9f69c491c2, type: 3}
+  sprite: {fileID: 21300000, guid: 06fdf0c323a2b544e84132176cde21c7, type: 3}
