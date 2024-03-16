@@ -13,13 +13,15 @@ MonoBehaviour:
   m_Name: 1
   m_EditorClassIdentifier: 
   id: 1
-  layout: 1,2
+  levelType: 0
+  targetId: 12
+  layout:
+  - 1,2,,,,,,,
+  layoutItemCount: 09000000
+  layoutTime: 26000000
+  layoutTargetCount: 00000000
   difficulty: 1
   items: 1,2,3,4,5
-  time: 90
-  targetItemId: 11
-  targetItemCount: 1
   rewardType: SingleTargetItem
-  storyStep: 1
-  minItem: 0
-  maxItem: 0
+  frezzedBlock: 0
+  frezzedCount: 0

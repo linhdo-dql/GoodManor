@@ -1,9 +1,13 @@
 ﻿using Assets;
+using Sirenix.Utilities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
+using Unity.Burst.Intrinsics;
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -14,8 +18,7 @@ public class GamePlayController : MonoBehaviour
     public static GamePlayController Instance;
     [SerializeField]
     private Transform layout;
-    [SerializeField]
-    private LevelData levelData;
+    public LevelData levelData;
     [SerializeField]
     private GameObject rowPrefab;
     [SerializeField]
@@ -24,46 +27,69 @@ public class GamePlayController : MonoBehaviour
     private GameObject itemPrefab;
     [SerializeField]
     private GameObject layerPrefab;
+    [SerializeField]
+    private GameObject targetGameObject;
+    [SerializeField]
+    private Image targetImage;
+    [SerializeField]
+    private Image targetProgressImage;
+    [SerializeField]
+    private TextMeshProUGUI progressText;
+    public float progressValue = 0;
+    private float progressMaxValue;
     private int numberItem;
     private List<GameObject> blocks;
     private int[] listItems;
     private List<Block> blockDatas;
-
+    private int currentLayout = 0;
+    protected LevelData[] levelDatas;
+    
     private void Awake()
     {
         Instance = this;
     }
-
-
     // Start is called before the first frame update
     void Start()
     {
         blocks = new List<GameObject>();
-        
-        numberItem = GetRandomNumberItem(levelData.minItem, levelData.maxItem);
+        levelDatas = GetAllInstances<LevelData>();
+        levelDatas.OrderBy(l => l.id);
+        //numberItem = GetRandomNumberItem(levelData.minItem, levelData.maxItem);
         InitLayout();
         //Random Number Item 
         GenerateElements();
-        
     }
-    //Test
-    private int GetRandomNumberItem(int min, int max)
+
+    void DisplayTime(float timeToDisplay)
+    {   
+        timeToDisplay += 1;
+
+        float minutes = Mathf.FloorToInt(timeToDisplay / 60);
+        float seconds = Mathf.FloorToInt(timeToDisplay % 60);
+
+        targetTimeText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+    }
+
+    public void UpdateProgress(int value)
     {
-        int randomNumber = min;
-        do
+        
+        progressValue += value;
+        var newValue = progressValue / progressMaxValue;
+       
+        LeanTween.value(oldValue, newValue, 1f).setOnUpdate((float f) =>
         {
-            randomNumber = Random.Range(min, max);
-        }
-        while (randomNumber % 3 != 0);
-        return randomNumber;
+            targetProgressImage.fillAmount = f;
+        }).setEaseInOutQuad().setOnComplete(() =>
+        {
+            oldValue = newValue;
+            progressText.text = progressValue + "/" + progressMaxValue;
+        });
     }
-    //
     private void CaculatorFill(int blockCount)
     {
-        //Phân phối Item Id ListItem
+        numberItem = levelData.layoutItemCount[currentLayout];
         listItems = new int[numberItem];
         var itemIds = levelData.items.Split(',');
-        //print(itemIds.Length);
         var itemIndex = 0;
         for (int i = 0; i < numberItem; i++)
         {
@@ -72,17 +98,28 @@ public class GamePlayController : MonoBehaviour
             {
                 itemIndex = itemIndex + 1 < itemIds.Length ? itemIndex += 1 : 0;
             }
-            
         }
+        var targetCount = levelData.layoutTargetCount[currentLayout];
+        //Add Target
+        if (targetCount != 0)
+        {
+            numberItem += levelData.layoutTargetCount[currentLayout];
+            targetImage.sprite = Resources.Load<Sprite>("Sprites/Items/Item_" + levelData.targetId);
+            int[] itemTarget = new int[targetCount];
+            for (int i = 0; i < itemTarget.Length; i++)
+            {
+                itemTarget[i] = levelData.targetId;
+            }
+            listItems = listItems.Concat(itemTarget).ToArray();
+        }
+
         listItems.Shuffle();
         List<int> allItemIds = listItems.ToList();
         blockDatas = new List<Block>();
         int cloneNumberItem = numberItem;
         int[] numberItemsBeforeSuffle = new int[blockCount];
-        //Phân phối số lượng ngẫu nhiên cho các block sao cho mỗi block có ít nhất 1 item
         for(int i = 0; i < numberItemsBeforeSuffle.Length; i++)
         {
-           
             if(i < blockCount-1)
             { 
                 int value = numberItem / numberItemsBeforeSuffle.Length;
@@ -101,27 +138,22 @@ public class GamePlayController : MonoBehaviour
             Block block = new Block(numberItemsBeforeSuffle[i]);
             blockDatas.Add(block);
         }
-        //Số lượng layer tối đa có thể = số lượng Item trên 1 block => Mỗi layer có 1 Item
         var tmpCount = 0;
         foreach (var block in blockDatas)
         {
-           
             var cloneItemCounts = block.NumItems;
             for (int j = 0; j < block.NumItems; j++)
             {
                 if (j == 0)
                 {
-
                     int initLayerItemCount;
-                    float chanceForThree = 0f; // Xác suất ra số 1 là 20%
-
+                    float chanceForThree = 0f;
                     if (Random.value < chanceForThree)
                     {
                         initLayerItemCount = 3;
                     }
                     else
                     {
-                        // Ngẫu nhiên giữa số 2 và số 3
                         initLayerItemCount = Random.Range(1, 3);
                     }
                     Layer newLayer;
@@ -226,16 +258,26 @@ public class GamePlayController : MonoBehaviour
     private void InitLayout()
     {
         ClearLayout();
+        targetGameObject.SetActive(levelData.layoutTargetCount[currentLayout] != 0);
+        oldValue = 0;
+        progressValue = 0;
+        targetProgressImage.fillAmount = 0;
+        progressMaxValue = levelData.layoutTargetCount[currentLayout];
+        progressText.text = progressValue + "/" + progressMaxValue;
+        timeRemaining = levelData.layoutTime[currentLayout];
+        timerIsRunning = true;
         int blockCount = 0;
-        var splitRow = levelData.layout.Split(',');
-        if(splitRow.Length > 8)
+        var splitRow = levelData.layout[currentLayout].Split(',');
+        splitRow = splitRow.Where(s => s != "").ToArray();
+        // Remove empty strings from the end
+        splitRow = splitRow.Reverse().Where(s => s != "").Reverse().ToArray();
+        if (splitRow.Length > 8)
         {
             var layoutRectPos = layout.GetComponent<RectTransform>().localPosition;
             layout.GetComponent<RectTransform>().localPosition = layoutRectPos - new Vector3(0, 154, 0);
         }
         foreach (var rl in splitRow)
         {   
-            
             var row = Instantiate(rowPrefab, layout);
             var rowHorizontalLayout = row.GetComponent<HorizontalLayoutGroup>();
             AlignmentRowLayout(rl, rowHorizontalLayout);
@@ -297,8 +339,17 @@ public class GamePlayController : MonoBehaviour
         return 0;
     }
     private int layerGenerated;
-    public List<LevelData> listLevel;
-    private int tmpCount = 0;
+    private bool isCompleted = false;
+    private bool timerIsRunning;
+    private float timeRemaining;
+    [SerializeField] private TextMeshProUGUI targetTimeText;
+    private float oldValue = 0;
+    [SerializeField] private GameObject losePopup;
+    [SerializeField] private GameObject victoryPopup;
+    [SerializeField] private GameObject pauseUI;
+
+    
+    public bool IsOnPlay = false;
 
     private void GenerateElements()
     {
@@ -331,38 +382,129 @@ public class GamePlayController : MonoBehaviour
       
     }
 
-    public void NextLevel()
+    public void NextLevel(int id)
     {
         ClearLayout();
+        currentLayout = 0;
         StopAllCoroutines();
         LeanTween.cancelAll();
         LeanTween.reset();
-        tmpCount += 1;
-        levelData = listLevel[tmpCount];
+        levelData = levelDatas[id];
         blocks = new List<GameObject>();
         blocks.Clear();
-        numberItem = GetRandomNumberItem(levelData.minItem, levelData.maxItem);
         InitLayout();
         //Random Number Item 
         GenerateElements();
+        isCompleted = false;
     }
 
     internal bool CheckWin()
     {
-        return GameObject.FindGameObjectsWithTag("Item").Length < 1;
+        return GameObject.FindGameObjectsWithTag("Item").Length < 1 || (levelData.layout.Count > 1 && currentLayout == levelData.layout.Count - 1 && progressValue == progressMaxValue);
     }
 
     private void Update()
     {
-        if(CheckWin())
+        if (IsOnPlay)
         {
-            SetWin();
+            if (CheckWin() && !isCompleted)
+            {
+                SetWin();
+            }
+
+            if (timerIsRunning)
+            {
+                if (timeRemaining > 0)
+                {
+                    timeRemaining -= Time.deltaTime;
+                    DisplayTime(timeRemaining);
+                }
+                else
+                {
+                    ShowLosePopup();
+                    timeRemaining = 0;
+                    timerIsRunning = false;
+                }
+            }
         }
+       
+    }
+
+    private void ShowLosePopup()
+    {
+        UIController.instance.CloseAllPopup();
+        losePopup.SetActive(true);
+        losePopup.GetComponent<LosePopupController>().Show(progressValue, progressMaxValue, levelData.targetId);
     }
 
     public void SetWin()
     {
-        NextLevel();   
+        isCompleted = true;
+        currentLayout++; 
+        if (currentLayout < levelData.layout.Count)
+        {
+            NextLayout();
+        }
+        else
+        {
+            ShowPopupWin();
+            
+        } 
+    }
+
+    private void ShowPopupWin()
+    {
+        UIController.instance.CloseAllPopup();
+        victoryPopup.SetActive(true);
+        victoryPopup.GetComponent<WinPopupController>().Show(levelData.targetId);
+    }
+
+    private void NextLayout()
+    {
+        StopAllCoroutines();
+        LeanTween.cancelAll();
+        LeanTween.reset();
+        blocks = new List<GameObject>();
+        blocks.Clear();
+        InitLayout();
+        //Random Number Item 
+        GenerateElements();
+        isCompleted = false;
+    }
+    public static T[] GetAllInstances<T>() where T : LevelData
+    {
+        string[] guids = AssetDatabase.FindAssets("t:" + typeof(T).Name);
+        T[] a = new T[guids.Length];
+        for (int i = 0; i < guids.Length; i++)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guids[i]);
+            a[i] = AssetDatabase.LoadAssetAtPath<T>(path);
+        }
+
+        return a;
+
+    }
+
+    internal void Replay()
+    {
+        NextLevel(levelData.id - 1 > 0 ? levelData.id - 1 : 0);
+    }
+
+    public void Pause()
+    {
+        UIController.instance.CloseAllPopup();
+        timerIsRunning = false;
+        pauseUI.SetActive(true);
+    }
+
+    public void Continue()
+    {   
+        timerIsRunning = true;
+    }
+
+    public void GobackHome()
+    {
+        UIController.instance.BackToHome();
     }
 }
 

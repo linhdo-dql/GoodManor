@@ -27,10 +27,7 @@ public class DragableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        Debug.Log("OnEndDrag");
-        
         objBeingDraged = null;
-
         canvasGroup.blocksRaycasts = true;
         if (transform.parent == dragArea)
         {

@@ -1,6 +1,6 @@
 id	layout	difficulty	items	time	targetItemId	targetItemCount	rewardType	storyStep
 1	1,2	1	1,2,3,4,5	90	11	1	SingleTargetItem	1
-2	2,2,2,2,2	1	1,2,3,4,5	150	12	1	SingleTargetItem	2
+2	2,2,2,2,2;2,1,2	1	1,2,3,4,5	150	12	1	SingleTargetItem	2
 3	2,3,3,3	1	3,4,5,6,7	120	13	1	SingleTargetItem	3
 4	2,3,3,2	1	3,4,5,6,7	210	14	1	SingleTargetItem	4
 5	2,3,3,3	2	5,6,7,8,9	210	15	1	SingleTargetItem	5

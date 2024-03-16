@@ -138,14 +138,18 @@ internal class LayerController : MonoBehaviour
 
     private IEnumerator HideItems()
     {
-        LeanTween.cancelAll();
+
+        LeanTween.reset();
+        if (items[0].GetComponent<ItemController>().item.id == GamePlayController.Instance.levelData.targetId)
+        {
+            GamePlayController.Instance.UpdateProgress(3);
+        }
         foreach(var item in items)
         {
             item.GetComponent<ItemController>().TweenHide();
-            print("scale");
         }
-        print("zo");
         yield return new WaitForSeconds(0.6f);
+        
         NextLayer();
     }
     
@@ -154,6 +158,7 @@ internal class LayerController : MonoBehaviour
     {
         var matchFull = true;
         var id = items[0].GetComponent<ItemController>().item.name;
+       
         foreach(var item in items)
         {
             if(item.GetComponent<ItemController>().item.name != id)

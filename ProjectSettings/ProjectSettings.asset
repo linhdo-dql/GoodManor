@@ -771,7 +771,7 @@ PlayerSettings:
   webGLMemoryGeometricGrowthStep: 0.2
   webGLMemoryGeometricGrowthCap: 96
   scriptingDefineSymbols:
-    Android: PUBLISHING_TOOLS_ASSET_STORE_RELEASE;SINGLETON_CORE_ASSET_STORE_RELEASE
+    Android: PUBLISHING_TOOLS_ASSET_STORE_RELEASE;SINGLETON_CORE_ASSET_STORE_RELEASE;ODIN_INSPECTOR;ODIN_INSPECTOR_3;ODIN_INSPECTOR_3_1
   additionalCompilerArguments: {}
   platformArchitecture: {}
   scriptingBackend: {}

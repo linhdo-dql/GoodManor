@@ -41,10 +41,6 @@ public class BlockController : MonoBehaviour
                 transform.GetChild(layerIndex - 2).gameObject.GetComponent<LayerController>().SetState(LayerState.Wait);
             }
         }
-        else
-        {
-            InitNewLayer(transform);
-        }
     }
 
     public void InitNewLayer(Transform transform)
@@ -57,6 +53,11 @@ public class BlockController : MonoBehaviour
 
     private void SetActiveLayer(GameObject layer)
     {
-        layer.GetComponent<LayerController>().SetState(LayerState.Showing);
+        var layerController = layer.GetComponent<LayerController>();
+        layerController.SetState(LayerState.Showing);
+        if(layerController.items.Count > 2)
+        {
+            layerController.CheckMatch();
+        }
     }
 }

@@ -17,14 +17,10 @@ public class TSVToSO
             string[] splitData = line.Split('\t');
             LevelData levelData = ScriptableObject.CreateInstance<LevelData>();
             levelData.id = int.Parse(splitData[0]);
-            levelData.layout = splitData[1];
+            levelData.layout = splitData[1].Split(";").ToList();
             levelData.difficulty = int.Parse(splitData[2]);
             levelData.items = splitData[3];
-            levelData.time = int.Parse(splitData[4]);
-            levelData.targetItemId = int.Parse(splitData[5]);
-            levelData.targetItemCount = int.Parse(splitData[6]);
             levelData.rewardType = splitData[7];
-            levelData.storyStep = int.Parse(splitData[8]);
             AssetDatabase.CreateAsset(levelData, $"Assets/Resources/LevelDatas/{levelData.id}.asset");
         }
         AssetDatabase.SaveAssets();
